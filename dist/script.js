@@ -952,7 +952,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var modals = function modals() {
+  var triggerPressed = false; //переменная для отслеживания нажатия триггера
+
   function bindModal(triggerSelector, modalSelector, closeSelector) {
+    var destroy = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
     var trigger = document.querySelectorAll(triggerSelector),
         modal = document.querySelector(modalSelector),
         close = document.querySelector(closeSelector),
@@ -964,12 +967,20 @@ var modals = function modals() {
           evt.preventDefault();
         }
 
+        triggerPressed = true; // переменная для удаления триггера при true - для кнопки gift
+
+        if (destroy) {
+          item.remove();
+        }
+
         windows.forEach(function (item) {
           item.style.display = 'none';
+          item.classList.add('animated', 'fadeIn'); //добавляем анимацию
         });
         modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        document.body.style.marginRight = "".concat(scroll, "px");
+        document.body.style.overflow = 'hidden'; //фикс от прокручивания при открытом попап
+
+        document.body.style.marginRight = "".concat(scroll, "px"); //отступ от "скачка" окна при закрытии попапа
       });
     });
     close.addEventListener('click', function () {
@@ -978,7 +989,7 @@ var modals = function modals() {
       });
       modal.style.display = 'none';
       document.body.style.overflow = '';
-      document.body.style.marginRight = '0px';
+      document.body.style.marginRight = '0px'; //отступ от "скачка" окна при закрытии попап
     });
     modal.addEventListener('click', function (evt) {
       if (evt.target && evt.target === modal) {
@@ -989,7 +1000,7 @@ var modals = function modals() {
     });
   }
 
-  function openModalByTime(modalSelector, time) {
+  function openModalByTime(selector, time) {
     setTimeout(function () {
       var display;
       document.querySelectorAll('[data-modal]').forEach(function (item) {
@@ -999,11 +1010,12 @@ var modals = function modals() {
       });
 
       if (!display) {
-        document.querySelector(modalSelector).style.display = 'block';
+        document.querySelector(selector).style.display = 'block';
         document.body.style.overflow = 'hidden';
       }
     }, time);
-  }
+  } // функция расчета отступа появляющегося скролла страницы
+
 
   function calcScroll() {
     var div = document.createElement('div');
@@ -1015,10 +1027,21 @@ var modals = function modals() {
     var scrollWidth = div.offsetWidth - div.clientWidth;
     div.remove();
     return scrollWidth;
+  } // функция для открытия попап при скролле страницы до конца
+
+
+  function openModalByScroll(selector) {
+    window.addEventListener('scroll', function () {
+      if (!triggerPressed && window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+        document.querySelector(selector).click();
+      }
+    });
   }
 
   bindModal('.button-design', '.popup-design', '.popup-design .popup-close');
   bindModal('.button-consultation', '.popup-consultation', '.popup-consultation .popup-close');
+  bindModal('.fixed-gift', '.popup-gift', '.popup-gift .popup-close', true);
+  openModalByScroll('.fixed-gift');
   openModalByTime('.popup-consultation', 60000);
 };
 
