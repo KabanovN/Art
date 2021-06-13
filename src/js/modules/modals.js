@@ -86,7 +86,9 @@ const modals = () => {
     // функция для открытия попап при скролле страницы до конца
     function openModalByScroll(selector) {
         window.addEventListener('scroll', () => {
-            if (!triggerPressed && (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight)) {
+            if (!triggerPressed && (window.pageYOffset + 
+                document.documentElement.clientHeight >= 
+                document.documentElement.scrollHeight)) {
                 document.querySelector(selector).click();
             }
         });
