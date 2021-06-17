@@ -38,8 +38,8 @@ const sliders = (slidesSelector, direction, next, prev) => {
 
         nextButton.addEventListener('click', () => {
             changeSlides(1);
-            slides[slideIndex - 1].classList.remove('slideInLeft');
-            slides[slideIndex - 1].classList.add('slideInRight');
+            slides[slideIndex - 1].classList.remove('slideInRight');
+            slides[slideIndex - 1].classList.add('slideInLeft');
         });
     } catch(e){}
 
@@ -52,8 +52,8 @@ const sliders = (slidesSelector, direction, next, prev) => {
         } else {
             paused = setInterval(function(){
                 changeSlides(1);
-                slides[slideIndex - 1].classList.remove('slideInLeft');
-                slides[slideIndex - 1].classList.add('slideInRight');
+                slides[slideIndex - 1].classList.remove('slideInRight');
+                slides[slideIndex - 1].classList.add('slideInLeft');
             }, 3000);
         }
     }

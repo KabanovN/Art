@@ -1,20 +1,20 @@
 const mask = (selector) => {
     // установка курсора в нужную позицию строки
-    const setCursorPosition = (pos, elem) => {
-        elem.focus();
-        elem.setElementRange(pos, pos);
+    // const setCursorPosition = (pos, elem) => {
+    //     elem.focus();
+    //     elem.setElementRange(pos, pos);
 
-        if (elem.setSelectionRange) {
-            elem.setSelectionRange(pos, pos);
-        } else if (elem.createTextRange) {
-            let range = elem.createTextRange();
+    //     if (elem.setSelectionRange) {
+    //         elem.setSelectionRange(pos, pos);
+    //     } else if (elem.createTextRange) {
+    //         let range = elem.createTextRange();
 
-            range.collapse(true);
-            range.moveEnd('character', pos);
-            range.moveStart('character', pos);
-            range.select();
-        }
-    };
+    //         range.collapse(true);
+    //         range.moveEnd('character', pos);
+    //         range.moveStart('character', pos);
+    //         range.select();
+    //     }
+    // };
 
     function createMask(event) {
         let pattern = '+7 (___) ___ __ __',
@@ -34,15 +34,17 @@ const mask = (selector) => {
             if (this.value.length === 2) {
                 this.value = '';
             }
-        } else {
-            setCursorPosition(this.value.length, this);
-        }
+        } 
+        // else {
+        //     setCursorPosition(this.value.length, this);
+        // }
     }
 
     const inputs = document.querySelectorAll(selector);
 
     inputs.forEach(item => {
-        item.addEventListener('click', createMask);
+        // item.addEventListener('click', createMask);
+        item.addEventListener('input', createMask);
         item.addEventListener('focus', createMask);
         item.addEventListener('blur', createMask);
     });

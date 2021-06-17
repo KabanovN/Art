@@ -3,6 +3,7 @@ import sliders from './modules/sliders';
 import forms from './modules/forms';
 import checkInputText from './modules/checkInputText';
 import mask from './modules/mask';
+import showMoreStyles from './modules/showMoreStyles';
 
 window.addEventListener('DOMContentLoaded', () => {
     "use strict";
@@ -13,4 +14,5 @@ window.addEventListener('DOMContentLoaded', () => {
     checkInputText('[name = "name"]');
     checkInputText('[name = "message"]');
     mask('[name = "phone"]');
+    showMoreStyles('.button-styles', '#styles .row');
 });
