@@ -47,6 +47,4 @@ const showMoreStyles = (trigger, wrapper) => {
     };
 };
 
-
-
 export default showMoreStyles;

@@ -543,6 +543,29 @@ module.exports = function (target, source) {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/internals/create-html.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/core-js/internals/create-html.js ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var requireObjectCoercible = __webpack_require__(/*! ../internals/require-object-coercible */ "./node_modules/core-js/internals/require-object-coercible.js");
+
+var quot = /"/g;
+
+// B.2.3.2.1 CreateHTML(string, tag, attribute, value)
+// https://tc39.github.io/ecma262/#sec-createhtml
+module.exports = function (string, tag, attribute, value) {
+  var S = String(requireObjectCoercible(string));
+  var p1 = '<' + tag;
+  if (attribute !== '') p1 += ' ' + attribute + '="' + String(value).replace(quot, '&quot;') + '"';
+  return p1 + '>' + S + '</' + tag + '>';
+};
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/internals/create-non-enumerable-property.js":
 /*!**************************************************************************!*\
   !*** ./node_modules/core-js/internals/create-non-enumerable-property.js ***!
@@ -900,6 +923,27 @@ module.exports = function (KEY, length, exec, sham) {
     );
     if (sham) createNonEnumerableProperty(RegExp.prototype[SYMBOL], 'sham', true);
   }
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/internals/forced-string-html-method.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/core-js/internals/forced-string-html-method.js ***!
+  \*********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+
+// check the existence of a method, lowercase
+// of a tag and escaping quotes in arguments
+module.exports = function (METHOD_NAME) {
+  return fails(function () {
+    var test = ''[METHOD_NAME]('"');
+    return test !== test.toLowerCase() || test.split('"').length > 3;
+  });
 };
 
 
@@ -3132,6 +3176,30 @@ $({ target: PROMISE, stat: true, forced: INCORRECT_ITERATION }, {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.string.link.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.string.link.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var createHTML = __webpack_require__(/*! ../internals/create-html */ "./node_modules/core-js/internals/create-html.js");
+var forcedStringHTMLMethod = __webpack_require__(/*! ../internals/forced-string-html-method */ "./node_modules/core-js/internals/forced-string-html-method.js");
+
+// `String.prototype.link` method
+// https://tc39.github.io/ecma262/#sec-string.prototype.link
+$({ target: 'String', proto: true, forced: forcedStringHTMLMethod('link') }, {
+  link: function link(url) {
+    return createHTML(this, 'a', 'href', url);
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.string.replace.js":
 /*!***********************************************************!*\
   !*** ./node_modules/core-js/modules/es.string.replace.js ***!
@@ -4226,6 +4294,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modules_checkInputText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/checkInputText */ "./src/js/modules/checkInputText.js");
 /* harmony import */ var _modules_mask__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/mask */ "./src/js/modules/mask.js");
 /* harmony import */ var _modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/showMoreStyles */ "./src/js/modules/showMoreStyles.js");
+/* harmony import */ var _modules_calc__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/calc */ "./src/js/modules/calc.js");
+
 
 
 
@@ -4235,15 +4305,66 @@ __webpack_require__.r(__webpack_exports__);
 window.addEventListener('DOMContentLoaded', function () {
   "use strict";
 
+  var formState = {
+    size: 0,
+    material: 0,
+    options: 0,
+    promo: false,
+    total: 0
+  };
   Object(_modules_modals__WEBPACK_IMPORTED_MODULE_0__["default"])();
   Object(_modules_sliders__WEBPACK_IMPORTED_MODULE_1__["default"])('.feedback-slider-item', '', '.main-next-btn', '.main-prev-btn');
   Object(_modules_sliders__WEBPACK_IMPORTED_MODULE_1__["default"])('.main-slider-item', 'vertical');
-  Object(_modules_forms__WEBPACK_IMPORTED_MODULE_2__["default"])();
+  Object(_modules_forms__WEBPACK_IMPORTED_MODULE_2__["default"])(formState);
   Object(_modules_checkInputText__WEBPACK_IMPORTED_MODULE_3__["default"])('[name = "name"]');
   Object(_modules_checkInputText__WEBPACK_IMPORTED_MODULE_3__["default"])('[name = "message"]');
   Object(_modules_mask__WEBPACK_IMPORTED_MODULE_4__["default"])('[name = "phone"]');
-  Object(_modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__["default"])('.button-styles', '.styles-2');
+  Object(_modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__["default"])('.button-styles', '#styles .row');
+  Object(_modules_calc__WEBPACK_IMPORTED_MODULE_6__["default"])('#size', '#material', '#options', '.promocode', '.calc-price');
 });
+
+/***/ }),
+
+/***/ "./src/js/modules/calc.js":
+/*!********************************!*\
+  !*** ./src/js/modules/calc.js ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+var calc = function calc(sizeSelector, materialSelector, optionsSelector, promocodeSelector, totalSelector, state) {
+  var size = document.querySelector(sizeSelector),
+      material = document.querySelector(materialSelector),
+      options = document.querySelector(optionsSelector),
+      promocode = document.querySelector(promocodeSelector),
+      total = document.querySelector(totalSelector);
+
+  var calcSum = function calcSum() {
+    var sum = Math.round(+size.value * +material.value + +options.value);
+
+    if (size.value == 0 || material.value == 0) {
+      total.style.color = 'red';
+      total.textContent = 'Выберите размер и материал картины';
+    } else if (promocode.value === 'IWANTPOPART') {
+      total.textContent = Math.round(sum * 0.7);
+      total.style.color = '';
+    } else {
+      total.textContent = sum;
+      total.style.color = '';
+    }
+
+    state[size] = size.value;
+  };
+
+  size.addEventListener('change', calcSum);
+  material.addEventListener('change', calcSum);
+  options.addEventListener('change', calcSum);
+  promocode.addEventListener('input', calcSum);
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (calc);
 
 /***/ }),
 
@@ -4306,7 +4427,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-var forms = function forms() {
+var forms = function forms(state) {
   var forms = document.querySelectorAll('form'),
       inputs = document.querySelectorAll('input'),
       upload = document.querySelectorAll('[name = "upload"]');
@@ -4359,6 +4480,13 @@ var forms = function forms() {
       statusText.textContent = status.loading;
       statusMessage.append(statusText);
       var formData = new FormData(item);
+
+      if (item.classList.contains('calc_form')) {
+        for (var key in state) {
+          formData.append(key, state[key]);
+        }
+      }
+
       var api; // if (item.closest('.popup-design') || item.classList.contains('calc_form')) {
       //     api = path.designer;
       // } else {
@@ -4409,21 +4537,19 @@ __webpack_require__.r(__webpack_exports__);
 
 var mask = function mask(selector) {
   // установка курсора в нужную позицию строки
-  var setCursorPosition = function setCursorPosition(pos, elem) {
-    elem.focus();
-    elem.setElementRange(pos, pos);
-
-    if (elem.setSelectionRange) {
-      elem.setSelectionRange(pos, pos);
-    } else if (elem.createTextRange) {
-      var range = elem.createTextRange();
-      range.collapse(true);
-      range.moveEnd('character', pos);
-      range.moveStart('character', pos);
-      range.select();
-    }
-  };
-
+  // const setCursorPosition = (pos, elem) => {
+  //     elem.focus();
+  //     elem.setElementRange(pos, pos);
+  //     if (elem.setSelectionRange) {
+  //         elem.setSelectionRange(pos, pos);
+  //     } else if (elem.createTextRange) {
+  //         let range = elem.createTextRange();
+  //         range.collapse(true);
+  //         range.moveEnd('character', pos);
+  //         range.moveStart('character', pos);
+  //         range.select();
+  //     }
+  // };
   function createMask(event) {
     var pattern = '+7 (___) ___ __ __',
         i = 0,
@@ -4442,14 +4568,16 @@ var mask = function mask(selector) {
       if (this.value.length === 2) {
         this.value = '';
       }
-    } else {
-      setCursorPosition(this.value.length, this);
-    }
+    } // else {
+    //     setCursorPosition(this.value.length, this);
+    // }
+
   }
 
   var inputs = document.querySelectorAll(selector);
   inputs.forEach(function (item) {
-    item.addEventListener('click', createMask);
+    // item.addEventListener('click', createMask);
+    item.addEventListener('input', createMask);
     item.addEventListener('focus', createMask);
     item.addEventListener('blur', createMask);
   });
@@ -4634,7 +4762,7 @@ var getResourse = function getResourse(url) {
         case 2:
           res = _context2.sent;
 
-          if (fetch.ok) {
+          if (res.ok) {
             _context2.next = 5;
             break;
           }
@@ -4669,12 +4797,20 @@ var getResourse = function getResourse(url) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _services_requests__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./services/requests */ "./src/js/modules/services/requests.js");
+/* harmony import */ var core_js_modules_es_array_concat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.concat */ "./node_modules/core-js/modules/es.array.concat.js");
+/* harmony import */ var core_js_modules_es_array_concat__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var core_js_modules_es_string_link__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.link */ "./node_modules/core-js/modules/es.string.link.js");
+/* harmony import */ var core_js_modules_es_string_link__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_link__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _services_requests__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./services/requests */ "./src/js/modules/services/requests.js");
 
 
-var showMoreStyles = function showMoreStyles(trigger, cardsSelector) {
-  var btn = document.querySelector(trigger),
-      cards = document.querySelectorAll(cardsSelector); // cards.forEach(item => {
+
+
+
+var showMoreStyles = function showMoreStyles(trigger, wrapper) {
+  var btn = document.querySelector(trigger); // cards.forEach(item => {
   //     item.classList.add('animated', 'fadeInUp');
   // });
   // btn.addEventListener('click', () => {
@@ -4686,12 +4822,32 @@ var showMoreStyles = function showMoreStyles(trigger, cardsSelector) {
   // });
 
   btn.addEventListener('click', function () {
-    Object(_services_requests__WEBPACK_IMPORTED_MODULE_0__["getResourse"])('http://localhost:3000/styles').then(function (res) {
-      return console.log(res);
+    Object(_services_requests__WEBPACK_IMPORTED_MODULE_3__["getResourse"])('http://localhost:3000/styles').then(function (res) {
+      return createCard(res);
+    }).catch(function () {
+      return showErrorMessage();
     });
-  }); //     const createCard = (result) => {
-  //         result.forEach()
-  //     };
+    this.remove();
+  });
+
+  var showErrorMessage = function showErrorMessage() {
+    var errorMessage = document.createElement('div');
+    errorMessage.textContent = 'Что-то пошло не так...';
+    errorMessage.style.textAlign = 'center';
+    document.querySelector(wrapper).append(errorMessage);
+  };
+
+  var createCard = function createCard(result) {
+    result.forEach(function (_ref) {
+      var src = _ref.src,
+          title = _ref.title,
+          link = _ref.link;
+      var card = document.createElement('div');
+      card.classList.add('animated', 'fadeInUp', 'col-sm-3', 'col-sm-offset-0', 'col-xs-10', 'col-xs-offset-1');
+      card.innerHTML = "\n                <div class=\"styles-block\">\n                    <img src=".concat(src, " alt=\"\">\n                    <h4>").concat(title, "</h4>\n                    <a href=").concat(link, ">\u041F\u043E\u0434\u0440\u043E\u0431\u043D\u0435\u0435</a>\n                </div>\n            ");
+      document.querySelector(wrapper).append(card);
+    });
+  };
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (showMoreStyles);
