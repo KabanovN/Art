@@ -21,6 +21,9 @@ const calc = (sizeSelector, materialSelector, optionsSelector, promocodeSelector
             total.textContent = sum;
             total.style.color = '';
         }
+
+        const price = 'price';
+        state[price] = sum;
     }
 
     size.addEventListener('change', calcSum);
