@@ -892,6 +892,9 @@ h4 {
 .often-questions .p-heading {
   text-align: center;
 }
+.hidden {
+  display: none;
+}
 .often-questions .accordion-heading {
   font-size: 2.2rem;
   cursor: pointer;
@@ -919,7 +922,8 @@ h4 {
 .often-questions .ui-accordion-header-active {
   cursor: auto;
   color: #c51abb;
-  margin-bottom: 0;
+  margin-bottom: 2rem;
+  cursor: pointer;
 }
 .often-questions .ui-accordion-header-active span {
   border-bottom: none;
