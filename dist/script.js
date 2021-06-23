@@ -2684,6 +2684,63 @@ $({ target: 'Array', proto: true, forced: FORCED }, {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.array.slice.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.array.slice.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var isObject = __webpack_require__(/*! ../internals/is-object */ "./node_modules/core-js/internals/is-object.js");
+var isArray = __webpack_require__(/*! ../internals/is-array */ "./node_modules/core-js/internals/is-array.js");
+var toAbsoluteIndex = __webpack_require__(/*! ../internals/to-absolute-index */ "./node_modules/core-js/internals/to-absolute-index.js");
+var toLength = __webpack_require__(/*! ../internals/to-length */ "./node_modules/core-js/internals/to-length.js");
+var toIndexedObject = __webpack_require__(/*! ../internals/to-indexed-object */ "./node_modules/core-js/internals/to-indexed-object.js");
+var createProperty = __webpack_require__(/*! ../internals/create-property */ "./node_modules/core-js/internals/create-property.js");
+var arrayMethodHasSpeciesSupport = __webpack_require__(/*! ../internals/array-method-has-species-support */ "./node_modules/core-js/internals/array-method-has-species-support.js");
+var wellKnownSymbol = __webpack_require__(/*! ../internals/well-known-symbol */ "./node_modules/core-js/internals/well-known-symbol.js");
+
+var SPECIES = wellKnownSymbol('species');
+var nativeSlice = [].slice;
+var max = Math.max;
+
+// `Array.prototype.slice` method
+// https://tc39.github.io/ecma262/#sec-array.prototype.slice
+// fallback for not array-like ES3 strings and DOM objects
+$({ target: 'Array', proto: true, forced: !arrayMethodHasSpeciesSupport('slice') }, {
+  slice: function slice(start, end) {
+    var O = toIndexedObject(this);
+    var length = toLength(O.length);
+    var k = toAbsoluteIndex(start, length);
+    var fin = toAbsoluteIndex(end === undefined ? length : end, length);
+    // inline `ArraySpeciesCreate` for usage native `Array#slice` where it's possible
+    var Constructor, result, n;
+    if (isArray(O)) {
+      Constructor = O.constructor;
+      // cross-realm fallback
+      if (typeof Constructor == 'function' && (Constructor === Array || isArray(Constructor.prototype))) {
+        Constructor = undefined;
+      } else if (isObject(Constructor)) {
+        Constructor = Constructor[SPECIES];
+        if (Constructor === null) Constructor = undefined;
+      }
+      if (Constructor === Array || Constructor === undefined) {
+        return nativeSlice.call(O, k, fin);
+      }
+    }
+    result = new (Constructor === undefined ? Array : Constructor)(max(fin - k, 0));
+    for (n = 0; k < fin; k++, n++) if (k in O) createProperty(result, n, O[k]);
+    result.length = n;
+    return result;
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.function.name.js":
 /*!**********************************************************!*\
   !*** ./node_modules/core-js/modules/es.function.name.js ***!
@@ -4295,6 +4352,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modules_mask__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/mask */ "./src/js/modules/mask.js");
 /* harmony import */ var _modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/showMoreStyles */ "./src/js/modules/showMoreStyles.js");
 /* harmony import */ var _modules_calc__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/calc */ "./src/js/modules/calc.js");
+/* harmony import */ var _modules_filter__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modules/filter */ "./src/js/modules/filter.js");
+/* harmony import */ var _modules_picture__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./modules/picture */ "./src/js/modules/picture.js");
+
+
 
 
 
@@ -4305,22 +4366,18 @@ __webpack_require__.r(__webpack_exports__);
 window.addEventListener('DOMContentLoaded', function () {
   "use strict";
 
-  var formState = {
-    size: 0,
-    material: 0,
-    options: 0,
-    promo: false,
-    total: 0
-  };
+  var priceState = {};
   Object(_modules_modals__WEBPACK_IMPORTED_MODULE_0__["default"])();
   Object(_modules_sliders__WEBPACK_IMPORTED_MODULE_1__["default"])('.feedback-slider-item', '', '.main-next-btn', '.main-prev-btn');
   Object(_modules_sliders__WEBPACK_IMPORTED_MODULE_1__["default"])('.main-slider-item', 'vertical');
-  Object(_modules_forms__WEBPACK_IMPORTED_MODULE_2__["default"])(formState);
+  Object(_modules_forms__WEBPACK_IMPORTED_MODULE_2__["default"])(priceState);
   Object(_modules_checkInputText__WEBPACK_IMPORTED_MODULE_3__["default"])('[name = "name"]');
   Object(_modules_checkInputText__WEBPACK_IMPORTED_MODULE_3__["default"])('[name = "message"]');
   Object(_modules_mask__WEBPACK_IMPORTED_MODULE_4__["default"])('[name = "phone"]');
   Object(_modules_showMoreStyles__WEBPACK_IMPORTED_MODULE_5__["default"])('.button-styles', '#styles .row');
-  Object(_modules_calc__WEBPACK_IMPORTED_MODULE_6__["default"])('#size', '#material', '#options', '.promocode', '.calc-price');
+  Object(_modules_calc__WEBPACK_IMPORTED_MODULE_6__["default"])('#size', '#material', '#options', '.promocode', '.calc-price', priceState);
+  Object(_modules_filter__WEBPACK_IMPORTED_MODULE_7__["default"])();
+  Object(_modules_picture__WEBPACK_IMPORTED_MODULE_8__["default"])('.sizes-block');
 });
 
 /***/ }),
@@ -4341,7 +4398,9 @@ var calc = function calc(sizeSelector, materialSelector, optionsSelector, promoc
       promocode = document.querySelector(promocodeSelector),
       total = document.querySelector(totalSelector);
 
-  var calcSum = function calcSum() {
+  function calcSum() {
+    var prop = this.getAttribute('id');
+    state[prop] = this.value;
     var sum = Math.round(+size.value * +material.value + +options.value);
 
     if (size.value == 0 || material.value == 0) {
@@ -4355,8 +4414,9 @@ var calc = function calc(sizeSelector, materialSelector, optionsSelector, promoc
       total.style.color = '';
     }
 
-    state[size] = size.value;
-  };
+    var price = 'price';
+    state[price] = sum;
+  }
 
   size.addEventListener('change', calcSum);
   material.addEventListener('change', calcSum);
@@ -4394,6 +4454,75 @@ var checkInputText = function checkInputText(selector) {
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (checkInputText);
+
+/***/ }),
+
+/***/ "./src/js/modules/filter.js":
+/*!**********************************!*\
+  !*** ./src/js/modules/filter.js ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var core_js_modules_es_string_split__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.string.split */ "./node_modules/core-js/modules/es.string.split.js");
+/* harmony import */ var core_js_modules_es_string_split__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_split__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_1__);
+
+
+
+var filter = function filter() {
+  var menu = document.querySelector('#portfolio .portfolio-menu'),
+      menuItems = menu.querySelectorAll('li'),
+      wrapper = document.querySelector('#portfolio .portfolio-wrapper'),
+      picsAll = wrapper.querySelectorAll('.all'),
+      noPics = document.querySelector('.portfolio-no'); // фильтрация - сначала скрываем всё, затем отражаем необходимое и центруем
+
+  function filterPics(pics) {
+    picsAll.forEach(function (pic) {
+      pic.style.display = 'none';
+      pic.classList.remove('animated', 'fadeIn');
+    });
+    noPics.style.display = 'none';
+    noPics.classList.remove('animated', 'fadeIn');
+
+    if (pics) {
+      pics.forEach(function (pic) {
+        pic.style.display = 'block';
+        pic.classList.add('animated', 'fadeIn');
+      });
+    } else {
+      noPics.style.display = 'block';
+      noPics.classList.add('animated', 'fadeIn');
+    }
+
+    wrapper.style.alignItems = 'center';
+    wrapper.style.justifyContent = 'center';
+  } // обработчик при клике
+
+
+  menu.addEventListener('click', function (evt) {
+    if (evt.target && evt.target.tagName === 'LI') {
+      var currentClass = evt.target.getAttribute('class').split(' ')[0];
+
+      if (currentClass === 'grandmother' || currentClass === 'granddad') {
+        filterPics();
+      } else {
+        var contentItems = wrapper.querySelectorAll(".".concat(currentClass));
+        filterPics(contentItems);
+      }
+
+      menuItems.forEach(function (item) {
+        item.classList.remove('active');
+        evt.target.classList.add('active');
+      });
+    }
+  });
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (filter);
 
 /***/ }),
 
@@ -4695,6 +4824,62 @@ var modals = function modals() {
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (modals);
+
+/***/ }),
+
+/***/ "./src/js/modules/picture.js":
+/*!***********************************!*\
+  !*** ./src/js/modules/picture.js ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.slice */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_1__);
+
+
+
+var pictureSizes = function pictureSizes(blocksSelector) {
+  var blocks = document.querySelectorAll(blocksSelector);
+
+  function showImg(block) {
+    var img = block.querySelector('img'),
+        p = block.querySelectorAll('p');
+    img.src = "".concat(img.src.slice(0, -4), "-1.png");
+    p.forEach(function (item) {
+      if (!item.classList.contains('sizes-hit')) {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  function hideImg(block) {
+    var img = block.querySelector('img'),
+        p = block.querySelectorAll('p');
+    img.src = "".concat(img.src.slice(0, -6), ".png");
+    p.forEach(function (item) {
+      item.style.display = 'block';
+    });
+  }
+
+  blocks.forEach(function (block) {
+    block.addEventListener('mouseover', function () {
+      showImg(block);
+    });
+    block.addEventListener('mouseout', function () {
+      hideImg(block);
+    });
+  });
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (pictureSizes); // логика:
+// 1. создаю функцию по отображению изображения в блоке
+// 2. созадю функцию по скрытию изображения
+// 3. создаю обработчик событий mouseover и mouseout с использованием п.1/п.2
 
 /***/ }),
 

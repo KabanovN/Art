@@ -5,6 +5,8 @@ import checkInputText from './modules/checkInputText';
 import mask from './modules/mask';
 import showMoreStyles from './modules/showMoreStyles';
 import calc from './modules/calc';
+import filter from './modules/filter';
+import pictureSizes from './modules/picture';
 
 window.addEventListener('DOMContentLoaded', () => {
     "use strict";
@@ -20,4 +22,6 @@ window.addEventListener('DOMContentLoaded', () => {
     mask('[name = "phone"]');
     showMoreStyles('.button-styles', '#styles .row');
     calc('#size', '#material', '#options', '.promocode', '.calc-price', priceState);
+    filter();
+    pictureSizes('.sizes-block');
 });
