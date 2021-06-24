@@ -8,6 +8,7 @@ import calc from './modules/calc';
 import filter from './modules/filter';
 import pictureSizes from './modules/picture';
 import accordion from './modules/accordion';
+import burger from './modules/burger';
 
 window.addEventListener('DOMContentLoaded', () => {
     "use strict";
@@ -26,4 +27,5 @@ window.addEventListener('DOMContentLoaded', () => {
     filter();
     pictureSizes('.sizes-block');
     accordion('.accordion-heading', '.accordion-block');
+    burger('.burger', '.burger-menu');
 });
