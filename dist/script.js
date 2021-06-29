@@ -4563,6 +4563,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var core_js_modules_es_string_split__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_split__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
 /* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _services_requests__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./services/requests */ "./src/js/modules/services/requests.js");
+
 
 
 
@@ -4588,6 +4590,8 @@ var drop = function drop() {
   function unhighlight(item) {
     if (item.closest('.calc_form')) {
       item.closest('.file_upload').style.backgroundColor = '#fff';
+    } else if (item.getAttribute('data-upload') !== null) {
+      item.closest('.file_upload').style.backgroundColor = '#f7e7e6';
     } else {
       item.closest('.file_upload').style.backgroundColor = '#ededed';
     }
@@ -4609,13 +4613,23 @@ var drop = function drop() {
   });
   fileInputs.forEach(function (input) {
     input.addEventListener('drop', function (evt) {
-      input.files = evt.dataTransfer.files; // отражаем имя файла
+      input.files = evt.dataTransfer.files;
 
-      var dots;
-      var array = input.files[0].name.split('.');
-      array[0].length > 6 ? dots = '...' : dots = '.';
-      var name = array[0].substr(0, 6) + dots + array[1];
-      input.previousElementSibling.textContent = name;
+      if (input.getAttribute('data-upload') !== null) {
+        // сразу отправляем на сервер
+        var formData = new FormData();
+        formData.append('file', input.files[0]);
+        Object(_services_requests__WEBPACK_IMPORTED_MODULE_3__["postData"])('assets/server.php', formData).then(function (res) {
+          console.log(res);
+        });
+      } else {
+        // отражаем имя файла
+        var dots;
+        var array = input.files[0].name.split('.');
+        array[0].length > 6 ? dots = '...' : dots = '.';
+        var name = array[0].substr(0, 6) + dots + array[1];
+        input.previousElementSibling.textContent = name;
+      }
     });
   });
 };

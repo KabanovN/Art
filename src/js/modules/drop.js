@@ -1,3 +1,5 @@
+import {postData} from "./services/requests";
+
 const drop = () => {
     const fileInputs = document.querySelectorAll('[name="upload"]');
 
@@ -19,9 +21,11 @@ const drop = () => {
 
     function unhighlight(item) {
         if (item.closest('.calc_form')) {
-            item.closest('.file_upload').style.backgroundColor = '#fff'; 
+            item.closest('.file_upload').style.backgroundColor = '#fff';
+        } else if (item.getAttribute('data-upload') !== null) {
+            item.closest('.file_upload').style.backgroundColor = '#f7e7e6'; 
         } else {
-            item.closest('.file_upload').style.backgroundColor = '#ededed'; 
+            item.closest('.file_upload').style.backgroundColor = '#ededed';
         }
     }
 
@@ -40,13 +44,24 @@ const drop = () => {
     fileInputs.forEach(input => {
         input.addEventListener('drop', (evt) => {
             input.files = evt.dataTransfer.files;
+            
+            if (input.getAttribute('data-upload') !== null) {
+                // сразу отправляем на сервер
+                const formData = new FormData();
+                formData.append('file', input.files[0]);
+                postData('assets/server.php', formData)
+                    .then(res => {
+                        console.log(res);
+                    });
 
-            // отражаем имя файла
-            let dots;
-            const array = input.files[0].name.split('.');
-            array[0].length > 6 ? dots = '...' : dots = '.';
-            const name = array[0].substr(0, 6) + dots + array[1];
-            input.previousElementSibling.textContent = name;
+            } else {
+                // отражаем имя файла
+                let dots;
+                const array = input.files[0].name.split('.');
+                array[0].length > 6 ? dots = '...' : dots = '.';
+                const name = array[0].substr(0, 6) + dots + array[1];
+                input.previousElementSibling.textContent = name;
+            }
         });
     });
 };
